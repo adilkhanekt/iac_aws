@@ -1,0 +1,42 @@
+---
+- hosts: "{{ passed_in_hosts }}"
+  become: yes
+  remote_user: ubuntu
+  become_user: root
+  tasks:
+    - name: install dependencies
+      apt:
+        name: "{{ package }} "
+        state: present
+        update_cache: yes
+      vars:
+        package:
+        - wget
+        - openjdk-11-jdk
+        - git
+
+    - name: ensure the jenkins apt repository key is installed
+      apt_key: 
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+        state: present
+
+    - name: ensure the repository is configured
+      apt_repository: 
+        repo: 'deb https://pkg.jenkins.io/debian-stable binary/' 
+        state: present
+
+    - name: ensure jenkins is installed
+      apt: 
+        name: jenkins
+        state: present
+        update_cache: yes
+
+    - name: ensure jenkins is running
+      systemd: 
+        service: jenkins
+        state: started
+
+    - name: Wait until Jenkins is up
+      shell: result_first=1; while [[ $result_first != 0 ]]; do if [[ `grep 'Jenkins is fully up and running' /var/log/jenkins/jenkins.log` ]];then result_first=0;else sleep 4;fi;done
+      register: result
+      until: result.rc == 0

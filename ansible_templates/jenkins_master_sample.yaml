@@ -1,0 +1,16 @@
+#Ansible Jenkins Master, sample playbook - jenkins-master-sample.yml
+---
+- hosts: "{{ passed_in_hosts }}"
+  become: yes
+  remote_user: ubuntu
+  become_user: root
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+    - name: Start Apache
+      service: 
+        name: apache2
+        state: started
+        enabled: yes
